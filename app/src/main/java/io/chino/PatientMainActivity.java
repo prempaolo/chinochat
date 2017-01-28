@@ -33,7 +33,10 @@ public class PatientMainActivity extends ChinoBaseActivity {
             switch (item.getItemId()) {
                 default:
                     getSupportFragmentManager().beginTransaction()
-                            .replace(R.id.frame_layout, ChatFragment.newInstance(doctorsMenuList.get(item.getItemId()).getUserId(), true)).commit();
+                            .replace(R.id.frame_layout, ChatFragment.newInstance(   doctorsMenuList.get(item.getItemId()).getUser_id(),
+                                    doctorsMenuList.get(item.getItemId()).getChat_id(),
+                                    doctorsMenuList.get(item.getItemId()).getEmail(),
+                                    true)).commit();
                     break;
             }
         }

@@ -20,7 +20,7 @@ import android.widget.Toast;
 import java.io.IOException;
 import java.util.HashMap;
 
-import io.chino.android.ChinoAPI;
+import io.chino.java.ChinoAPI;
 import io.chino.api.auth.LoggedUser;
 import io.chino.api.common.ChinoApiException;
 import io.chino.api.document.Document;
@@ -71,8 +71,16 @@ public class Login extends AppCompatActivity {
                 }
                 startActivity(intent);
             }
+        } else if (intent.hasExtra(Constants.INTENT_ADD_DOCTOR_REQUEST)){
+            //TODO: gestire la richiesta di aggiungere un dottore
+            if(intent.getBooleanExtra(Constants.INTENT_ADD_DOCTOR_REQUEST, false)){
+                Document d = ChinoFCM.getInstance().getDocumentShared();
+                HashMap<String, Object> content = (HashMap<String, Object>)d.getContentAsHashMap().get("content");
+                String userId = (String)content.get("userId");
+                String role = (String)content.get("role");
+                Toast.makeText(Login.this, userId + " " + role, Toast.LENGTH_SHORT).show();
+            }
         }
-
 
         Constants.chino = new ChinoAPI(HOST);
         toolbar = (Toolbar)findViewById(R.id.tool_bar);
@@ -145,8 +153,8 @@ public class Login extends AppCompatActivity {
         @Override
         protected String doInBackground(Void... params) {
             try {
-                LoggedUser loggedUser = Constants.chino.auth.login(USERNAME, PASSWORD, Constants.APPLICATION_ID, Constants.APPLICATION_SECRET);
-                Constants.chino.initClient(loggedUser.getAccessToken(), HOST);
+
+                LoggedUser loggedUser = Constants.chino.auth.loginWithPassword(USERNAME, PASSWORD, Constants.APPLICATION_ID, Constants.APPLICATION_SECRET);
 
                 Constants.user = Constants.chino.auth.checkUserStatus();
 
@@ -169,7 +177,7 @@ public class Login extends AppCompatActivity {
         protected void onPostExecute(String msg){
             if(msg.equals("patient") | msg.equals("doctor")) {
                 chinoFCM = ChinoFCM.getInstance();
-                chinoFCM.init(Constants.chino, Login.this);
+                chinoFCM.init(Constants.chino, Login.this, Constants.SERVER_KEY_DOCUMENT_ID);
                 SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
                 SharedPreferences.Editor editor = settings.edit();
                 //I use sharedPreference because the values last even if the app is closed instead of global variables that will be lost
@@ -200,5 +208,23 @@ public class Login extends AppCompatActivity {
         }
     }
 
+
+    /*private class AcceptRequest extends AsyncTask<Void, Void, String> {
+
+        @Override
+        protected String doInBackground(Void... params) {
+            try {
+
+            } catch (IOException | ChinoApiException e) {
+                return e.toString();
+            }
+        }
+
+
+        @Override
+        protected void onPostExecute(String msg){
+
+        }
+    }*/
 }
 

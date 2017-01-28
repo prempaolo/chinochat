@@ -1,6 +1,6 @@
 package io.chino.utils;
 
-import io.chino.android.ChinoAPI;
+import io.chino.java.ChinoAPI;
 import io.chino.api.user.User;
 
 public class Constants {
@@ -15,13 +15,14 @@ public class Constants {
     public static String FAIL = "fail";
     public static ChinoAPI chino;
     public static User user;
-    public static String DOCTOR_USER_SCHEMA_ID = "d8947154-900a-4c8b-92fd-67e9fa6131fa";
-    public static String PATIENT_USER_SCHEMA_ID = "a6666ea7-1275-42c7-b3ef-932b6492e687";
-    public static String CHAT_REPOSITORY_ID = "345b9c8f-d020-478f-a944-fb87995f9018";
-    public static String REPOSITORY_ID = "396ffe2f-30b4-4d9b-85b0-60fd8d915b98";
-    public static String ROLE_SCHEMA_ID = "818a335e-a74d-4a25-b33b-3c98d5656b64";
-    public static String NOTIFICATIONS_SCHEMA_ID = "0b532d9e-325d-4de1-a9c4-aba26dd06e6e";
-    public static String CHAT_SCHEMA_ID = "cc41e656-9ab1-45e7-91bd-19d11a016979";
+    public static String DOCTOR_USER_SCHEMA_ID = "8e1cd6a5-1950-4412-af09-e82c6326681a";
+    public static String PATIENT_USER_SCHEMA_ID = "244aa961-7ba7-4160-8288-3daf4556fb59";
+    public static String CHAT_REPOSITORY_ID = "a8acfff3-482f-4a54-8322-5f8a40cd2da1";
+    public static String REPOSITORY_ID = "1d877650-18de-4d65-975e-3d3db11dd3d9";
+    public static String ROLE_SCHEMA_ID = "a96d566f-1655-4171-967f-cb5f0237083f";
+    public static String NOTIFICATIONS_SCHEMA_ID = "036fd9ff-3280-4778-812f-7bdbb8389034";
+    public static String USERS_GROUP_ID = "462d4a01-b925-4c46-bdae-ac67ccd08d21";
+    //public static String CHAT_SCHEMA_ID = "cc41e656-9ab1-45e7-91bd-19d11a016979";
     public static String DOCTORS = "doctors";
     public static String PATIENTS = "patients";
     public static String FROM_USER_TO_CHAT = "users";
@@ -31,7 +32,8 @@ public class Constants {
     public static String MESSAGE_DATE= "date";
     public static String MESSAGE_USER_ID = "user_id";
     public static String MESSAGE_ROLE = "role";
-    public static String INTENT_ADDED_DOCTOR = "io.chino.intent_added_doctor";
+    public static String INTENT_ADD_DOCTOR_REQUEST = "io.chino.intent_added_doctor";
     public static String INTENT_NEW_MESSAGE = "io.chino.intent_new_message";
     public static String INTENT_OPEN_CHAT = "io.chino.intent_open_chat";
+    public static String SERVER_KEY_DOCUMENT_ID = "f67f9bae-1b26-47d5-a838-4a9a2b0e8534";
 }

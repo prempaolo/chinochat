@@ -42,10 +42,16 @@ public class DoctorMainActivity extends ChinoBaseActivity {
                 default:
                     if (item.getGroupId() == GROUP_DOCTORS) {
                         getSupportFragmentManager().beginTransaction()
-                                .replace(R.id.frame_layout, ChatFragment.newInstance(doctorsMenuList.get(item.getItemId()).getUserId(), true)).commit();
+                                .replace(R.id.frame_layout, ChatFragment.newInstance(   doctorsMenuList.get(item.getItemId()).getUser_id(),
+                                                                                        doctorsMenuList.get(item.getItemId()).getChat_id(),
+                                                                                        doctorsMenuList.get(item.getItemId()).getEmail(),
+                                                                                        true)).commit();
                     } else if (item.getGroupId() == GROUP_PATIENTS) {
                         getSupportFragmentManager().beginTransaction()
-                                .replace(R.id.frame_layout, ChatFragment.newInstance(patientsMenuList.get(item.getItemId()).getUserId(), false)).commit();
+                                .replace(R.id.frame_layout, ChatFragment.newInstance(   patientsMenuList.get(item.getItemId()).getUser_id(),
+                                                                                        patientsMenuList.get(item.getItemId()).getChat_id(),
+                                                                                        patientsMenuList.get(item.getItemId()).getEmail(),
+                                                                                        false)).commit();
                     }
                     break;
             }

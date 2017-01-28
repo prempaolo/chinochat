@@ -2,6 +2,7 @@ package io.chino;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -15,8 +16,6 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 
-import com.prempaolo.simplenotification.gcm.ChinoFCM;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,12 +24,14 @@ import java.util.List;
 import io.chino.api.common.ChinoApiException;
 import io.chino.api.document.Document;
 import io.chino.api.user.User;
+import io.chino.models.UserOnMenu;
 import io.chino.utils.Constants;
 
 public class ChinoBaseActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
         ChatFragment.OnFragmentInteractionListener,
-        AddDoctorFragment.OnFragmentInteractionListener{
+        AddDoctorFragment.OnFragmentInteractionListener,
+        PendingRequestsFragment.OnFragmentInteractionListener {
 
     protected static final int GROUP_DOCTORS = 1;
     protected static final int GROUP_PATIENTS = 2;
@@ -43,8 +44,8 @@ public class ChinoBaseActivity extends AppCompatActivity
     protected Toolbar toolbar;
     protected Menu mMenu;
 
-    protected List<User> doctorsMenuList;
-    protected List<User> patientsMenuList;
+    protected List<UserOnMenu> doctorsMenuList;
+    protected List<UserOnMenu> patientsMenuList;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -56,6 +57,7 @@ public class ChinoBaseActivity extends AppCompatActivity
         toolbar = (Toolbar) findViewById(R.id.tool_bar);
 
         settings = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+
         mDrawerView.setNavigationItemSelectedListener(this);
 
         if(settings.getBoolean(Constants.IS_DOCTOR, false)) {
@@ -110,6 +112,10 @@ public class ChinoBaseActivity extends AppCompatActivity
                 getSupportFragmentManager().beginTransaction()
                         .replace(R.id.frame_layout, new AddDoctorFragment()).commit();
                 return true;
+            case R.id.nav_pending_requests:
+                getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.frame_layout, new PendingRequestsFragment()).commit();
+                return true;
             default:
                 return false;
         }
@@ -137,6 +143,11 @@ public class ChinoBaseActivity extends AppCompatActivity
 
     }
 
+    @Override
+    public void onPendingRequestsFragmentInteraction(Uri uri) {
+
+    }
+
     protected class ReadDocument extends AsyncTask<String, Void, String> {
         @Override
         protected String doInBackground(String... params) {
@@ -151,18 +162,18 @@ public class ChinoBaseActivity extends AppCompatActivity
     }
 
     //Just one class to get doctors and patients to add in the lateral drawer menu
-    private class GetUsers extends AsyncTask<String, Void, List<User>> {
+    private class GetUsers extends AsyncTask<String, Void, List<UserOnMenu>> {
         private boolean doctor;
         @Override
-        protected List<User> doInBackground(String... params) {
+        protected List<UserOnMenu> doInBackground(String... params) {
             try {
                 doctor = params[0].equals(DOCTORS);
-                Document d = Constants.chino.documents.read((String)Constants.user.getAttributesAsHashMap().get(params[0]));
-                HashMap<String, String> users = (HashMap<String, String>) d.getContentAsHashMap().get(Constants.FROM_USER_TO_CHAT);
-                List<User> usersToAdd = new ArrayList<>();
-                for(String s : users.keySet()){
-                    if(!s.equals(""))
-                        usersToAdd.add(Constants.chino.users.read(s));
+                List<Document> documents = Constants.chino.documents.list((String)Constants.user.getAttributesAsHashMap().get(params[0])).getDocuments();
+                List<UserOnMenu> usersToAdd = new ArrayList<>();
+                for(Document d : documents){
+                    usersToAdd.add(new UserOnMenu(  (String) d.getContentAsHashMap().get("user_id"),
+                                                    (String) d.getContentAsHashMap().get("email"),
+                                                    (String) d.getContentAsHashMap().get("chat_id")));
                 }
                 if(doctor)
                     doctorsMenuList = usersToAdd;
@@ -176,7 +187,7 @@ public class ChinoBaseActivity extends AppCompatActivity
         }
 
         @Override
-        protected void onPostExecute(List<User> result){
+        protected void onPostExecute(List<UserOnMenu> result){
             if(result!=null){
                 MenuItem usersMenu;
                 if(doctor)
@@ -186,9 +197,9 @@ public class ChinoBaseActivity extends AppCompatActivity
                 usersMenu.getSubMenu().clear();
                 for(int i=0; i<result.size(); i++){
                     if(doctor) {
-                        usersMenu.getSubMenu().add(GROUP_DOCTORS, i, i, result.get(i).getUsername());
+                        usersMenu.getSubMenu().add(GROUP_DOCTORS, i, i, result.get(i).getEmail());
                     } else {
-                        usersMenu.getSubMenu().add(GROUP_PATIENTS, i, i, result.get(i).getUsername());
+                        usersMenu.getSubMenu().add(GROUP_PATIENTS, i, i, result.get(i).getEmail());
                     }
                 }
             }

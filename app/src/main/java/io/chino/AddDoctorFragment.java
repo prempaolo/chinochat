@@ -30,11 +30,13 @@ import java.util.HashMap;
 import java.util.List;
 
 import io.chino.api.common.ChinoApiException;
+import io.chino.api.common.Field;
 import io.chino.api.document.Document;
 import io.chino.api.permission.PermissionRule;
 import io.chino.api.permission.PermissionRuleCreatedDocument;
 import io.chino.api.permission.PermissionValues;
 import io.chino.api.schema.Schema;
+import io.chino.api.schema.SchemaStructure;
 import io.chino.api.user.User;
 import com.prempaolo.simplenotification.gcm.ChinoFCM;
 import io.chino.utils.Constants;
@@ -195,66 +197,75 @@ public class AddDoctorFragment extends Fragment {
     }
 
     protected String sendMessageAux(String role) throws IOException, ChinoApiException {
-        Document users = Constants.chino.documents.read((String)doctor.getAttributesAsHashMap().get(role));
-        HashMap<String, Object> content = users.getContentAsHashMap();
-        HashMap<String, String> chatMap;
-        HashMap<String, String> usersAdded = (HashMap<String, String>) content.get("users");
+
         if(doctor.getUserId().equals(Constants.user.getUserId())){
             return "You can't add yourself!";
         }
-        if(usersAdded.get(Constants.user.getUserId()) == null) {
-            Schema chat = Constants.chino.schemas.create(Constants.CHAT_REPOSITORY_ID, settings.getString(Constants.USER_ID, "")+":"+doctor.getUserId(), SchemaChat.class);
-
-            Document userDoctors = Constants.chino.documents.read((String)Constants.user.getAttributesAsHashMap().get("doctors"));
-            chatMap = (HashMap<String, String>) userDoctors.getContentAsHashMap().get("users");
-            //I'll check if there's already the doctor_id in the "doctors" attribute of the user
-            if(chatMap.get(doctor.getUserId())==null){
-                chatMap.put(doctor.getUserId(), chat.getSchemaId());
-                content = new HashMap<>();
-                content.put("users", chatMap);
-                Constants.chino.documents.update(userDoctors.getDocumentId(), content);
+        List<Document> doctorsAdded = Constants.chino.documents.list((String)Constants.user.getAttributesAsHashMap().get("doctors")).getDocuments();
+        for(Document d : doctorsAdded){
+            if(d.getContentAsHashMap().get("user_id").equals(doctor.getUserId())){
+                return "Doctor already added!";
             }
-
-            PermissionRule rule = new PermissionRule();
-            rule.setManage(PermissionValues.READ, PermissionValues.DELETE, PermissionValues.UPDATE);
-            PermissionRuleCreatedDocument createdDocument = new PermissionRuleCreatedDocument();
-            createdDocument.setCreatedDocument(rule);
-            createdDocument.setManage("R","U","D", "L", "C");
-            Constants.chino.permissions.permissionsOnResourceChildren(PermissionValues.GRANT,
-                    PermissionValues.SCHEMAS,
-                    chat.getSchemaId(),
-                    PermissionValues.DOCUMENTS,
-                    PermissionValues.USERS,
-                    doctor.getUserId(),
-                    createdDocument);
-
-            usersAdded.put(Constants.user.getUserId(), chat.getSchemaId());
-            content = new HashMap<>();
-            content.put("users", usersAdded);
-            Constants.chino.documents.update(users.getDocumentId(), content);
-            content = new HashMap<>();
-            String roleString;
-            if(role.equals("patients")) {
-                roleString = "patient";
-            } else {
-                roleString = "doctor";
-            }
-            content.put("message", "A new "+roleString+" added you!");
-            content.put("document_id", "");
-            Document doc = Constants.chino.documents.create(Constants.NOTIFICATIONS_SCHEMA_ID, content);
-            ChinoFCM.getInstance().setCustomNotification(createCustomNotification());
-            ChinoFCM.getInstance().shareDocument(doc.getDocumentId(), doctor.getUserId());
-            ChinoFCM.getInstance().setCustomMessage("A new "+roleString+" added you!");
-
-            return "Doctor added successfully!";
-        } else {
-            return "Doctor already added!";
         }
+
+        PermissionRule rule = new PermissionRule();
+        rule.setManage("C", "R", "U", "D", "L");
+
+        SchemaStructure structure = new SchemaStructure();
+        List<Field> fieldList = new ArrayList<>();
+        fieldList.add(new Field("message", "string"));
+        fieldList.add(new Field("username", "string", true));
+        fieldList.add(new Field("user_id", "string", true));
+        fieldList.add(new Field("role", "string"));
+        fieldList.add(new Field("date", "date"));
+        fieldList.add(new Field("time", "time"));
+        structure.setFields(fieldList);
+
+        Schema chat = Constants.chino.schemas.create(Constants.CHAT_REPOSITORY_ID, settings.getString(Constants.USER_ID, "")+":"+doctor.getUserId(), structure);
+        Constants.chino.permissions.permissionsOnResourceChildren(PermissionValues.GRANT,
+                PermissionValues.SCHEMAS,
+                chat.getSchemaId(),
+                PermissionValues.DOCUMENTS,
+                PermissionValues.USERS,
+                doctor.getUserId(),
+                rule);
+        HashMap<String, Object> content = new HashMap<>();
+        content.put("user_id", Constants.user.getUserId());
+        content.put("chat_id", chat.getSchemaId());
+        content.put("email", Constants.user.getUsername());
+
+        String users_schema_id = (String)doctor.getAttributesAsHashMap().get(role);
+        Constants.chino.documents.create(users_schema_id, content);
+
+        content = new HashMap<>();
+        content.put("user_id", doctor.getUserId());
+        content.put("chat_id", chat.getSchemaId());
+        content.put("email", doctor.getUsername());
+        users_schema_id = (String)Constants.user.getAttributesAsHashMap().get("doctors");
+        Constants.chino.documents.create(users_schema_id, content);
+
+        content = new HashMap<>();
+        String roleString;
+        if(role.equals("patients")) {
+            roleString = "patient";
+        } else {
+            roleString = "doctor";
+        }
+        content.put("message", "A new "+roleString+" added you!");
+        content.put("document_id", "");
+        HashMap<String, HashMap<String, Object>> contentWrapper = new HashMap<>();
+        contentWrapper.put("content", content);
+        Document doc = Constants.chino.documents.create(Constants.NOTIFICATIONS_SCHEMA_ID, contentWrapper);
+        ChinoFCM.getInstance().setCustomNotification(createCustomNotification());
+        ChinoFCM.getInstance().shareDocument(doc.getDocumentId(), doctor.getUserId());
+        ChinoFCM.getInstance().setCustomMessage("A new "+roleString+" added you!");
+
+        return "Doctor added successfully!";
     }
 
     private NotificationCompat.Builder createCustomNotification(){
         Intent intent = new Intent(getContext(), Login.class);
-        intent.putExtra(Constants.INTENT_ADDED_DOCTOR, true);
+        intent.putExtra(Constants.INTENT_ADD_DOCTOR_REQUEST, true);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent pendingIntent = PendingIntent.getActivity(getContext(), 0, intent,
                 PendingIntent.FLAG_ONE_SHOT);
@@ -268,13 +279,4 @@ public class AddDoctorFragment extends Fragment {
                 .setSound(defaultSoundUri)
                 .setContentIntent(pendingIntent);
     }
-}
-
-class SchemaChat {
-    String message;
-    String username;
-    String user_id;
-    String role;
-    Date date;
-    Time time;
 }

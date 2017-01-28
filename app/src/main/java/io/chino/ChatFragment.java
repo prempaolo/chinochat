@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.NotificationCompat;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -24,8 +25,6 @@ import android.widget.ProgressBar;
 import com.prempaolo.simplenotification.gcm.ChinoFCM;
 
 import java.io.IOException;
-import java.sql.Date;
-import java.sql.Time;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -43,9 +42,13 @@ import io.chino.utils.MyMessageAdapter;
 
 public class ChatFragment extends Fragment {
     private static final String ARG_USER_ID = "user_id";
+    private static final String ARG_CHAT_ID = "chat_id";
+    private static final String ARG_EMAIL = "email";
     private static final String ARG_DOCTOR = "doctor";
 
     private String USER_ID;
+    private String CHAT_ID;
+    private String EMAIL;
     private boolean DOCTOR;
     private SharedPreferences settings;
     private RecyclerView mRecyclerView;
@@ -61,10 +64,12 @@ public class ChatFragment extends Fragment {
         // Required empty public constructor
     }
 
-    public static ChatFragment newInstance(String user_id, boolean doctor) {
+    public static ChatFragment newInstance(String user_id, String chat_id, String email, boolean doctor) {
         ChatFragment fragment = new ChatFragment();
         Bundle args = new Bundle();
         args.putString(ARG_USER_ID, user_id);
+        args.putString(ARG_CHAT_ID, chat_id);
+        args.putString(ARG_EMAIL, email);
         args.putBoolean(ARG_DOCTOR, doctor);
         fragment.setArguments(args);
         return fragment;
@@ -75,7 +80,10 @@ public class ChatFragment extends Fragment {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
             USER_ID = getArguments().getString(ARG_USER_ID);
+            CHAT_ID = getArguments().getString(ARG_CHAT_ID);
+            EMAIL = getArguments().getString(ARG_EMAIL);
             DOCTOR = getArguments().getBoolean(ARG_DOCTOR);
+
         }
     }
 
@@ -113,6 +121,7 @@ public class ChatFragment extends Fragment {
             }
         });
 
+        ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle(EMAIL);
         new RetrieveChat().execute();
 
         return view;
@@ -151,21 +160,11 @@ public class ChatFragment extends Fragment {
         void onChatFragmentInteraction();
     }
 
-
     private class RetrieveChat extends AsyncTask<Void, Void, List<Message>> {
         @Override
         protected List<Message> doInBackground(Void... params) {
             try {
-                User u = Constants.chino.users.read(settings.getString(Constants.USER_ID, ""));
-                String userChat;
-                if(DOCTOR)
-                    userChat = (String)u.getAttributesAsHashMap().get(Constants.DOCTORS);
-                else
-                    userChat = (String)u.getAttributesAsHashMap().get(Constants.PATIENTS);
-                Document doc = Constants.chino.documents.read(userChat);
-                HashMap<String, String> fromUsersToChat = (HashMap<String, String>) doc.getContentAsHashMap().get(Constants.FROM_USER_TO_CHAT);
-                String schemaChatId = fromUsersToChat.get(USER_ID);
-                List<Document> chat = Constants.chino.documents.list(schemaChatId, 0, true).getDocuments();
+                List<Document> chat = Constants.chino.documents.list(CHAT_ID).getDocuments();
                 List<Message> chatMessages = new ArrayList<>();
                 for(Document d : chat){
                     Message message = new Message();
@@ -192,7 +191,6 @@ public class ChatFragment extends Fragment {
     }
 
     private class SendMessage extends AsyncTask<String, Void, String> {
-        private User u;
         private String message;
         private String date;
         private String time;
@@ -201,17 +199,8 @@ public class ChatFragment extends Fragment {
         protected String doInBackground(String... params) {
             try {
                 message = params[0];
-                u = Constants.chino.users.read(settings.getString(Constants.USER_ID, ""));
-                String userChat;
-                if(DOCTOR)
-                    userChat = (String)u.getAttributesAsHashMap().get(Constants.DOCTORS);
-                else
-                    userChat = (String)u.getAttributesAsHashMap().get(Constants.PATIENTS);
-                Document doc = Constants.chino.documents.read(userChat);
-                HashMap<String, String> fromUsersToChat = (HashMap<String, String>) doc.getContentAsHashMap().get(Constants.FROM_USER_TO_CHAT);
-                String schemaChatId = fromUsersToChat.get(USER_ID);
                 HashMap<String, Object> content = new HashMap<>();
-                content.put(Constants.MESSAGE_USERNAME, u.getUsername());
+                content.put(Constants.MESSAGE_USERNAME, Constants.user.getUsername());
                 content.put(Constants.MESSAGE_CONTENT, message);
                 DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
                 date = df.format(Calendar.getInstance().getTime());
@@ -219,13 +208,13 @@ public class ChatFragment extends Fragment {
                 df = new SimpleDateFormat("HH:mm:ss");
                 time = df.format(Calendar.getInstance().getTime());
                 content.put(Constants.MESSAGE_TIME, time);
-                content.put(Constants.MESSAGE_USER_ID, u.getUserId());
+                content.put(Constants.MESSAGE_USER_ID, USER_ID);
                 if(DOCTOR){
                     content.put(Constants.MESSAGE_ROLE, "doctor");
                 } else {
                     content.put(Constants.MESSAGE_ROLE, "patient");
                 }
-                return Constants.chino.documents.create(schemaChatId, content).getDocumentId();
+                return Constants.chino.documents.create(CHAT_ID, content).getDocumentId();
             } catch (ChinoApiException | IOException e) {
                 return Constants.FAIL;
             }
@@ -236,7 +225,7 @@ public class ChatFragment extends Fragment {
             if(!result.equals(Constants.FAIL)){
                 ChinoFCM chinoFCM = ChinoFCM.getInstance();
                 chinoFCM.setCustomNotification(createCustomNotification());
-                chinoFCM.shareDocument(result, u.getUserId());
+                chinoFCM.shareDocument(result, USER_ID);
                 Message m = new Message();
                 m.setText(message);
                 m.setName(Constants.user.getUsername());

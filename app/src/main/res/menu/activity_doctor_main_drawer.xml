@@ -6,6 +6,10 @@
             android:id="@+id/nav_add_doctor"
             android:icon="@drawable/ic_menu_send"
             android:title="Add Doctor" />
+        <item
+            android:id="@+id/nav_pending_requests"
+            android:icon="@drawable/ic_menu_manage"
+            android:title="Pending Requests" />
     </group>
 
     <item android:id="@+id/patients"
