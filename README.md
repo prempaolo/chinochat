@@ -4,5 +4,5 @@ It also relies on the following module for Android which allows to use the Fireb
 in compliance with the laws for the management of health sensitive data:
 
 ``
-https://github.com/tentello/chino-notifications
+[a link](https://github.com/tentello/chino-notifications)
 ``
