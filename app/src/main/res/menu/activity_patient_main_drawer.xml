@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_add_doctor"
+            android:icon="@drawable/ic_menu_send"
+            android:title="Add Doctor" />
+        <item
+            android:id="@+id/nav_pending_requests"
+            android:icon="@drawable/ic_menu_manage"
+            android:title="Pending Requests" />
+    </group>
+
+    <item android:id="@+id/doctors"
+        android:title="Doctors">
+        <menu>
+        </menu>
+    </item>
+
+</menu>

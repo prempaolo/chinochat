@@ -1,0 +1,50 @@
+<resources>
+    <string name="app_name">Chino</string>
+    <string name="gcm_send_message">Token retrieved and sent to server! You can now use gcmsender to
+        send downstream messages to this app.</string>
+    <string name="registering_message">Generating InstanceID token...</string>
+    <string name="token_error_message">An error occurred while either fetching the InstanceID token,
+        sending the fetched token to the server or subscribing to the PubSub topic. Please try
+        running the sample again.</string>
+    <string name="active_notification_count_zero">No active notification</string>
+    <plurals name="active_notification_count_nonzero">
+        <item quantity="one">%d active notification</item>
+        <item quantity="other">%d active notifications</item>
+    </plurals>
+    <!-- {@deprecated Use GCM configuration file instead.} -->
+    <!-- Override this in your application to provide the GCM senderId -->
+    <string name="chinogcm_sender_id" translatable="false" />
+    <string-array name="string_variable_types">
+        <item>string</item>
+        <item>integer</item>
+        <item>float</item>
+        <item>text</item>
+        <item>boolean</item>
+        <item>date</item>
+        <item>time</item>
+        <item>dateTime</item>
+        <item>base64</item>
+        <item>json</item>
+    </string-array>
+    <string name="declare_some_fields_error">Declare some fields first!</string>
+    <string name="title_activity_temp">temp</string>
+    <string name="description">Description</string>
+    <string name="create">Create</string>
+    <string name="user_created">User Created!</string>
+    <string name="drawer_open">Open navigation drawer</string>
+    <string name="drawer_close">Close navigation drawer</string>
+    <string name="action_websearch">Web search</string>
+    <string name="app_not_available">Sorry, there\'s no web browser available</string>
+    <string name="chino">Chino</string>
+    <string name="create_user_schema">Create UserSchema</string>
+    <string name="title_activity_test_drawer">TestDrawer</string>
+    <string name="search">Search</string>
+    <string name="log_out">Log Out</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+
+    <string name="action_settings">Settings</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+</resources>
